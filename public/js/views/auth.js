@@ -98,7 +98,11 @@ export async function onboarding(root) {
     if (flow.step === 'welcome') {
       root.innerHTML = `
         <div class="welcome">
-          <div class="welcome__art"><b>SIPA</b></div>
+          <div class="welcome__art">
+            <img class="welcome__logo" src="/brand/logo-mark-light.svg" alt="" width="78" height="78" />
+            <b>SIPA</b>
+            <small>Système intégré de prévention et d’accès</small>
+          </div>
           <div>
             <p class="eyebrow">Sénégal · Dakar & Thiès</p>
             <h1 class="display">Votre santé,<br />en toute <em>discrétion</em>.</h1>

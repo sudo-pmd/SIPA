@@ -203,7 +203,7 @@ function paintResults(root, results, offline) {
         .rule{height:1px;background:#cfc5ae;margin:26px 0}
         .small{font-family:Arial,sans-serif;font-size:12px;color:#6d7c76;line-height:1.7}
         .code{font-family:monospace;font-size:16px;letter-spacing:.12em}
-        .stamp{border:1px solid #0e3b39;border-radius:10px;padding:14px 18px;margin-top:34px;font-family:Arial,sans-serif;font-size:12px}
+        .stamp{border:1px solid #123a5c;border-radius:10px;padding:14px 18px;margin-top:34px;font-family:Arial,sans-serif;font-size:12px}
       </style></head><body>
       <p class="small">RÉPUBLIQUE DU SÉNÉGAL · DISPOSITIF SIPA</p>
       <h1>Attestation de passage — Bilan préventif</h1>

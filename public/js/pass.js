@@ -11,6 +11,7 @@ export async function showVoucherPass(voucher) {
         <p class="eyebrow">Pass confidentiel</p>
         <div class="qr-slot" id="pass-qr"></div>
         <p class="pass__code" id="pass-code">SIPA-••••-••••••</p>
+        <button class="copy-btn" id="pass-copy">${icon('copy', 13)} Copier le code</button>
         <div class="pass__timer">
           ${icon('shield', 13)}
           <span id="pass-timer">Renouvellement dans 60 s</span>
@@ -37,6 +38,7 @@ export async function showVoucherPass(voucher) {
   const codeNode = dialog.overlay.querySelector('#pass-code');
   const timerNode = dialog.overlay.querySelector('#pass-timer');
   const barNode = dialog.overlay.querySelector('#pass-bar');
+  dialog.overlay.querySelector('#pass-copy')?.addEventListener('click', () => copyPass(codeNode.textContent));
 
   const paint = async () => {
     const left = secondsLeft();
@@ -80,6 +82,7 @@ export async function showAppointmentPass(appointment) {
         <p class="eyebrow">Bilan intégré 4-en-1</p>
         <div class="qr-slot" id="appt-qr"></div>
         <p class="pass__code">${esc(appointment.passCode)}</p>
+        <button class="copy-btn" data-copy="${esc(appointment.passCode)}">${icon('copy', 13)} Copier le code</button>
       </div>
       <div class="stack" style="margin-top:14px">
         <div class="row row--between"><span class="muted small">Créneau</span><strong class="small">${new Date(
@@ -95,6 +98,9 @@ export async function showAppointmentPass(appointment) {
       <p class="small muted" style="margin-top:14px">Présentez ce pass à l’accueil : le soignant le scanne et saisit vos 4 paramètres en une seule consultation de 20 minutes. Aucune mention médicale n’apparaît sur le pass.</p>`,
     actions: [{ label: 'Fermer', variant: 'ghost' }],
   });
+  dialog.overlay.querySelector('[data-copy]')?.addEventListener('click', (event) =>
+    copyPass(event.currentTarget.dataset.copy)
+  );
   await renderQR(dialog.overlay.querySelector('#appt-qr'), appointment.passCode, { size: 180 });
 }
 

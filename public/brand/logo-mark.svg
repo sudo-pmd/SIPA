@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="SIPA">
+  <g fill="none" stroke="#1d4f7a" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M33 84C19 72 13 51 24 39 33 29 47 31 53 41" />
+    <path d="M53 41C56 34 61 29 68 27.5" />
+    <path d="M80 23C74 44 60 60 48 70 39 78 42 87 52 87 73 87 88 68 87 47 86.5 35 84 27 81 22" />
+  </g>
+  <circle cx="89" cy="12" r="5.5" fill="#f2a23a" />
+</svg>
