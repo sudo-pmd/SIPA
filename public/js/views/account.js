@@ -4,6 +4,24 @@ import { icon, esc, relative, toast, modal } from '../ui.js';
 import { registerBiometric } from './auth.js';
 import { hasSnapshot, clearSnapshot } from '../offline.js';
 
+// Préférence de mouvement (transitions d'écran et animations).
+function readMotion() {
+  try {
+    return localStorage.getItem('sipa.motion') === 'reduced' ? 'reduced' : 'auto';
+  } catch {
+    return 'auto';
+  }
+}
+
+function writeMotion(mode) {
+  document.documentElement.dataset.motion = mode === 'reduced' ? 'reduced' : '';
+  try {
+    localStorage.setItem('sipa.motion', mode);
+  } catch {
+    /* stockage indisponible */
+  }
+}
+
 const KIND_ICON = {
   WELCOME: 'shield',
   APPOINTMENT: 'calendar',
@@ -126,6 +144,23 @@ export async function settings(root) {
     </section>
 
     <section class="section">
+      <div class="section__head"><h2>Apparence</h2></div>
+      <div class="card">
+        <div class="row row--between">
+          <div>
+            <p class="eyebrow">Transitions & animations</p>
+            <p class="small muted" style="margin:4px 0 0">Réduisez les effets si vous êtes sensible au mouvement.</p>
+          </div>
+          ${icon('sparkle', 18)}
+        </div>
+        <div class="chips" style="margin-top:12px" id="motion-chips">
+          <button class="chip ${readMotion() === 'auto' ? 'is-active' : ''}" data-motion="auto">Animations</button>
+          <button class="chip ${readMotion() === 'reduced' ? 'is-active' : ''}" data-motion="reduced">Réduites</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
       <div class="section__head"><h2>Données locales</h2></div>
       <div class="card">
         <p class="small muted">Coffre hors-ligne sur cet appareil : <b>${cached ? 'présent' : 'absent'}</b>. Il est chiffré par votre PIN.</p>
@@ -135,6 +170,17 @@ export async function settings(root) {
 
     <section class="section">
       <div class="list">
+        <button class="list__item" id="install-app">
+          <div class="list__icon" style="background:var(--accent-tint);color:#a76a12">${icon('install', 16)}</div>
+          <div class="list__body"><strong>${
+            window.SIPA?.isStandalone?.() ? 'Application installée' : 'Installer l’application'
+          }</strong><span>${
+            window.SIPA?.isStandalone?.()
+              ? 'Ouverture plein écran, accès hors connexion'
+              : 'Ajouter SIPA à votre écran d’accueil'
+          }</span></div>
+          ${icon('chevron', 16)}
+        </button>
         <a class="list__item" href="#/pro">
           <div class="list__icon">${icon('shield', 16)}</div>
           <div class="list__body"><strong>Portail professionnel</strong><span>Pharmaciens, soignants, conseillers</span></div>
@@ -219,6 +265,37 @@ export async function settings(root) {
       }
     };
   });
+
+  root.querySelectorAll('[data-motion]').forEach((button) => {
+    button.onclick = () => {
+      const mode = writeMotion(button.dataset.motion);
+      root.querySelectorAll('[data-motion]').forEach((chip) => chip.classList.toggle('is-active', chip === button));
+      toast(mode === 'reduced' ? 'Animations réduites' : 'Animations activées', 'ok');
+    };
+  });
+
+  root.querySelector('#install-app').onclick = async () => {
+    if (window.SIPA?.isStandalone?.()) {
+      toast('SIPA est déjà installée sur cet appareil.', 'ok');
+      return;
+    }
+    if (window.SIPA?.canInstall?.()) {
+      const accepted = await window.SIPA.install();
+      toast(accepted ? 'Installation lancée' : 'Installation annulée', accepted ? 'ok' : 'info');
+      return;
+    }
+    modal({
+      title: 'Installer SIPA',
+      subtitle: 'Application web progressive',
+      body: `<p class="small">SIPA fonctionne comme une application : icône sur l’écran d’accueil, ouverture plein écran et accès au coffre hors connexion.</p>
+        <div class="stack" style="margin-top:14px">
+          <div class="card card--flat"><p class="eyebrow">iPhone & iPad · Safari</p><p class="small muted" style="margin:6px 0 0">Bouton Partager, puis « Sur l’écran d’accueil ».</p></div>
+          <div class="card card--flat"><p class="eyebrow">Android · Chrome</p><p class="small muted" style="margin:6px 0 0">Menu ⋮, puis « Installer l’application » ou « Ajouter à l’écran d’accueil ».</p></div>
+          <div class="card card--flat"><p class="eyebrow">Ordinateur</p><p class="small muted" style="margin:6px 0 0">Icône d’installation dans la barre d’adresse du navigateur.</p></div>
+        </div>`.trim(),
+      actions: [{ label: 'Compris', variant: 'primary' }],
+    });
+  };
 
   root.querySelector('#clear-cache').onclick = async () => {
     await clearSnapshot();

@@ -21,16 +21,31 @@ const ICONS = {
   download: '<path d="M12 3v12"/><path d="M7 10.5l5 5 5-5"/><path d="M4 20h16"/>',
   logout: '<path d="M10 4H5v16h5"/><path d="M15 8l4 4-4 4M9 12h10"/>',
   wifi: '<path d="M4 9a13 13 0 0 1 16 0M7 12.5a8 8 0 0 1 10 0M10 16a3 3 0 0 1 4 0"/><circle cx="12" cy="19" r="0.8"/>',
+  copy: '<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 5.5H6a2 2 0 0 0-2 2V16"/>',
+  install: '<path d="M12 4v10"/><path d="M8 11l4 4 4-4"/><path d="M4.5 18.5h15"/>',
+  sparkle: '<path d="M12 3.5l1.7 4.6 4.8 1.7-4.8 1.7L12 16.1l-1.7-4.6L5.5 9.8l4.8-1.7L12 3.5Z"/><path d="M18 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2Z"/>',
 };
 
 export function icon(name, size = 20) {
   return `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] ?? ''}</svg>`;
 }
 
+// Marque SIPA : cœur-feuille + point orange, reprise du logo fourni.
+export function logoMark(size = 38) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" fill="none" aria-hidden="true" focusable="false">
+    <g stroke="currentColor" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M33 84C19 72 13 51 24 39 33 29 47 31 53 41" />
+      <path d="M53 41C56 34 61 29 68 27.5" />
+      <path d="M80 23C74 44 60 60 48 70 39 78 42 87 52 87 73 87 88 68 87 47 86.5 35 84 27 81 22" />
+    </g>
+    <circle cx="89" cy="12" r="5.5" fill="#f2a23a" />
+  </svg>`;
+}
+
 export function logo({ small = false } = {}) {
   return `<a class="brand ${small ? 'brand--sm' : ''}" href="#/home" aria-label="SIPA, accueil">
-    <span class="brand__mark">S</span>
-    <span class="brand__text"><b>SIPA</b><i>Sutura</i></span>
+    <span class="brand__mark">${logoMark(small ? 34 : 38)}</span>
+    <span class="brand__text"><b>SIPA</b><i>Prévention &amp; accès</i></span>
   </a>`;
 }
 
@@ -48,7 +63,7 @@ export function toast(message, kind = 'info') {
   }, kind === 'alert' ? 6000 : 3600);
 }
 
-export function modal({ title, subtitle = '', body = '', actions = [], dismissable = true, className = '' }) {
+export function modal({ title, subtitle = '', body = '', actions = [], dismissable = true, className = '', onMount }) {
   const host = document.getElementById('modal-root');
   const overlay = document.createElement('div');
   overlay.className = 'overlay';
@@ -87,7 +102,21 @@ export function modal({ title, subtitle = '', body = '', actions = [], dismissab
       else if (!actions[index]?.keepOpen) close();
     }
   });
-  return { close, overlay, body: overlay.querySelector('.modal__body') };
+  // Échap ferme la feuille ; le focus revient au point de départ.
+  const onKey = (event) => {
+    if (event.key === 'Escape' && dismissable) {
+      close();
+      document.removeEventListener('keydown', onKey);
+    }
+  };
+  document.addEventListener('keydown', onKey);
+  overlay.addEventListener('transitionend', () => {
+    if (!overlay.isConnected || overlay.classList.contains('is-open')) return;
+    document.removeEventListener('keydown', onKey);
+  });
+  const result = { close, overlay, body: overlay.querySelector('.modal__body') };
+  if (typeof onMount === 'function') onMount(result);
+  return result;
 }
 
 let libPromises = {};
@@ -114,7 +143,7 @@ export function ensureLib(name, src, type = 'script') {
   return libPromises[name];
 }
 
-export async function renderQR(target, text, { size = 190, dark = '#0e2b29', light = '#fffdf8' } = {}) {
+export async function renderQR(target, text, { size = 190, dark = '#123a5c', light = '#ffffff' } = {}) {
   if (!target) return false;
   try {
     await ensureLib('qrcode', '/vendor/qrcode.js');

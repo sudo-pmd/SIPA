@@ -1,6 +1,6 @@
 // Amorçage de la PWA SIPA : routeur, verrouillage « Sutura », flux temps réel.
 import { state, api, setSession, clearSession, setVault, clearStaff, openEventStream, vaultToken } from './api.js';
-import { icon, logo, toast, esc, fmtDateTime, modal } from './ui.js';
+import { icon, logo, logoMark, toast, esc, fmtDateTime, modal } from './ui.js';
 import * as auth from './views/auth.js';
 import * as home from './views/home.js';
 import * as mapView from './views/map.js';
@@ -16,6 +16,47 @@ const LOCK_AFTER_MS = 60_000;
 let lockTimer = null;
 let unread = 0;
 let closeStream = null;
+let viewTransitionRunning = false;
+let installPrompt = null;
+
+// ------------------------------------------------------------ Préférences UI
+const prefersReducedMotion = () =>
+  document.documentElement.dataset.motion === 'reduced' ||
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+export function setMotion(mode) {
+  const reduced = mode === 'reduced';
+  document.documentElement.dataset.motion = reduced ? 'reduced' : '';
+  try {
+    localStorage.setItem('sipa.motion', reduced ? 'reduced' : 'auto');
+  } catch {
+    /* stockage indisponible */
+  }
+  return reduced ? 'reduced' : 'auto';
+}
+
+export function motionSetting() {
+  let stored = null;
+  try {
+    stored = localStorage.getItem('sipa.motion');
+  } catch {
+    stored = null;
+  }
+  return stored === 'reduced' ? 'reduced' : 'auto';
+}
+
+function applyMotionPreference() {
+  if (motionSetting() === 'reduced') document.documentElement.dataset.motion = 'reduced';
+}
+
+applyMotionPreference();
+
+function hideSplash() {
+  const splash = document.getElementById('splash');
+  if (!splash || splash.classList.contains('is-done')) return;
+  splash.classList.add('is-done');
+  setTimeout(() => splash.remove(), 500);
+}
 
 const NAV = [
   { route: 'home', label: 'Accueil', icon: 'home' },
@@ -105,7 +146,7 @@ function renderLock() {
   const node = document.createElement('div');
   node.className = 'lock';
   node.innerHTML = `
-    <div class="lock__mark">S</div>
+    <div class="lock__mark" style="color:#fff">${logoMark(42)}</div>
     <div>
       <p class="eyebrow">Espace personnel</p>
       <h1>${esc(state.user?.pseudonym ?? 'Votre espace')}</h1>
@@ -122,7 +163,8 @@ function renderLock() {
     </div>
     <p class="lock__foot">Verrouillage automatique après 60 secondes d’inactivité ou au passage en arrière-plan. Aucune notification ne mentionne votre état de santé.</p>
     <button class="btn--quiet muted" id="lock-switch">Utiliser un autre compte</button>`;
-  app.appendChild(node);
+  // Hors de #app : le filtre de confidentialité ne doit jamais déplacer la feuille.
+  document.body.appendChild(node);
 
   const input = node.querySelector('#lock-pin');
   const submit = node.querySelector('#lock-submit');
@@ -157,6 +199,13 @@ function renderLock() {
   node.querySelector('#lock-form').addEventListener('submit', (event) => {
     event.preventDefault();
     unlock();
+  });
+
+  // Saisie des 6 chiffres : déverrouillage automatique, sans appuyer sur le bouton.
+  input.addEventListener('input', () => {
+    const digits = input.value.replace(/\D/g, '').slice(0, 6);
+    if (digits !== input.value) input.value = digits;
+    if (digits.length === 6 && !submit.disabled) setTimeout(unlock, 140);
   });
 
   node.querySelector('#lock-bio')?.addEventListener('click', async () => {
@@ -288,7 +337,17 @@ async function boot() {
     }
   }
 
-  window.addEventListener('hashchange', () => render());
+  window.addEventListener('hashchange', () => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    render();
+  });
+
+  // Installation de la PWA : invite native capturée pour les réglages.
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    installPrompt = event;
+    window.dispatchEvent(new Event('sipa:installable'));
+  });
   window.addEventListener('online', () => render());
   window.addEventListener('offline', () => render());
 
@@ -326,10 +385,16 @@ async function boot() {
   });
 
   if (state.token) handleStream();
-  await render();
+  try {
+    await render();
+  } finally {
+    hideSplash();
+  }
+  // Filet de sécurité si un écran reste bloqué en chargement.
+  setTimeout(hideSplash, 2500);
 }
 
-export async function render() {
+async function paintCurrentRoute() {
   const { name, parts, params } = parseRoute();
   const def = ROUTES[name] ?? ROUTES.home;
 
@@ -378,6 +443,27 @@ export async function render() {
   refreshUnread();
 }
 
+// Transitions entre pages : View Transitions API quand elle est disponible,
+// repli silencieux sur l'animation CSS d'écran sinon.
+export async function render() {
+  if (!document.startViewTransition || prefersReducedMotion() || viewTransitionRunning || state.locked) {
+    return paintCurrentRoute();
+  }
+  viewTransitionRunning = true;
+  let started = false;
+  try {
+    const transition = document.startViewTransition(async () => {
+      started = true;
+      await paintCurrentRoute();
+    });
+    await transition.finished.catch(() => {});
+  } catch {
+    if (!started) await paintCurrentRoute();
+  } finally {
+    viewTransitionRunning = false;
+  }
+}
+
 // Exposé pour les vues (formulaires, navigation programmatique).
 window.SIPA = {
   go,
@@ -391,6 +477,19 @@ window.SIPA = {
   setVault,
   setSession,
   vaultToken,
+  logoMark,
+  setMotion,
+  motionSetting,
+  canInstall: () => Boolean(installPrompt),
+  isStandalone: () =>
+    window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true,
+  async install() {
+    if (!installPrompt) return false;
+    installPrompt.prompt();
+    const choice = await installPrompt.userChoice.catch(() => ({ outcome: 'dismissed' }));
+    installPrompt = null;
+    return choice.outcome === 'accepted';
+  },
 };
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {

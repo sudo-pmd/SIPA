@@ -1,10 +1,18 @@
 // Service worker SIPA : coquille applicative hors-ligne, cache des tuiles
 // et des points du département, réseau d'abord pour les données de santé.
-const VERSION = 'sipa-v2';
+const VERSION = 'sipa-v3';
 const SHELL = [
   '/',
   '/index.html',
   '/css/app.css',
+  '/css/sipa-2026.css',
+  '/fonts/inter-latin.woff2',
+  '/fonts/inter-latin-ext.woff2',
+  '/fonts/manrope-latin.woff2',
+  '/fonts/manrope-latin-ext.woff2',
+  '/brand/logo-mark.svg',
+  '/brand/logo-mark-light.svg',
+  '/brand/logo.svg',
   '/js/app.js',
   '/js/api.js',
   '/js/ui.js',
