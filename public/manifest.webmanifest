@@ -1,0 +1,42 @@
+{
+  "name": "SIPA — Prévention & Accès",
+  "short_name": "SIPA",
+  "description": "Bilan intégré 4-en-1, autotests et traitements en pharmacie de quartier, sans exposition.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/#/home",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f0e6",
+  "theme_color": "#0e3b39",
+  "categories": ["health", "medical", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mon coffre-fort",
+      "short_name": "Coffre-fort",
+      "url": "/#/vault",
+      "description": "Consulter mes résultats chiffrés"
+    },
+    {
+      "name": "Pharmacies proches",
+      "short_name": "Carte",
+      "url": "/#/map?type=PHARMACIE",
+      "description": "Trouver un autotest en stock"
+    }
+  ]
+}
