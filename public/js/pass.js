@@ -40,6 +40,7 @@ export async function showVoucherPass(voucher) {
   const barNode = dialog.overlay.querySelector('#pass-bar');
   dialog.overlay.querySelector('#pass-copy')?.addEventListener('click', () => copyPass(codeNode.textContent));
 
+  let lastCode = '';
   const paint = async () => {
     const left = secondsLeft();
     let code = '------';
@@ -48,11 +49,15 @@ export async function showVoucherPass(voucher) {
     } catch {
       code = '------';
     }
-    const text = `${voucher.codePrefix}-${code}`;
-    codeNode.textContent = text;
-    await renderQR(qrSlot, text);
     timerNode.textContent = `Renouvellement dans ${left} s`;
     barNode.style.width = `${(left / 60) * 100}%`;
+    // Le QR n'est régénéré qu'au changement de code (toutes les 60 s) :
+    // inutile de reconstruire son SVG à chaque battement de la barre.
+    const text = `${voucher.codePrefix}-${code}`;
+    if (text === lastCode) return;
+    lastCode = text;
+    codeNode.textContent = text;
+    await renderQR(qrSlot, text);
   };
 
   await paint();

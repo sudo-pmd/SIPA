@@ -1,6 +1,6 @@
 // Amorçage de la PWA SIPA : routeur, verrouillage « Sutura », flux temps réel.
-import { state, api, setSession, clearSession, setVault, clearStaff, openEventStream, vaultToken } from './api.js';
-import { icon, logo, logoMark, toast, esc, fmtDateTime, modal } from './ui.js';
+import { state, api, setSession, clearSession, setVault, clearStaff, openEventStream } from './api.js';
+import { icon, logo, logoMark, toast, esc, modal } from './ui.js';
 import * as auth from './views/auth.js';
 import * as home from './views/home.js';
 import * as mapView from './views/map.js';
@@ -17,7 +17,10 @@ let lockTimer = null;
 let unread = 0;
 let closeStream = null;
 let viewTransitionRunning = false;
+let renderQueued = false;
+let firstPaint = true;
 let installPrompt = null;
+let scrollHandler = null;
 
 // ------------------------------------------------------------ Préférences UI
 const prefersReducedMotion = () =>
@@ -114,17 +117,6 @@ function shellHTML(active) {
     </nav>`;
 }
 
-function offlineBanner() {
-  return navigator.onLine
-    ? ''
-    : `<div class="banner banner--offline" style="margin:12px 0">${icon('wifi', 16)}
-        <span>Mode hors connexion — vos pass et vos dernières données restent disponibles.</span></div>`;
-}
-
-export function screenShell(title = '') {
-  return `${offlineBanner()}${title}`;
-}
-
 // --------------------------------------------------------------- Verrouillage
 export function lockNow(reason = 'manual') {
   if (!state.token) return;
@@ -177,6 +169,9 @@ function renderLock() {
   };
 
   const unlock = async () => {
+    // La saisie des 6 chiffres et la soumission du formulaire peuvent se
+    // déclencher ensemble : un seul appel d'ouverture doit partir.
+    if (submit.disabled) return;
     const pin = input.value.trim();
     if (!/^\d{6}$/.test(pin)) return fail('Saisissez vos 6 chiffres.');
     submit.disabled = true;
@@ -219,6 +214,7 @@ function renderLock() {
       setSession({ token: result.token, user: state.user });
       if (result.vault) setVault(result.vault);
       state.locked = false;
+      document.body.classList.remove('is-blurred');
       node.remove();
       toast('Coffre-fort déverrouillé', 'ok');
       scheduleLock();
@@ -235,6 +231,7 @@ function renderLock() {
       const snapshot = await auth.openOfflineVault(pin);
       state.offlineVault = snapshot;
       state.locked = false;
+      document.body.classList.remove('is-blurred');
       node.remove();
       toast('Coffre hors-ligne ouvert', 'ok');
       go('/vault');
@@ -377,7 +374,7 @@ async function boot() {
   });
 
   document.addEventListener('click', (event) => {
-    const lockBtn = event.target.closest('#lock-now');
+    const lockBtn = event.target.closest('#lock-now, [data-lock-now]');
     if (lockBtn) {
       event.preventDefault();
       lockNow('manual');
@@ -433,22 +430,44 @@ async function paintCurrentRoute() {
   }
 
   const topbar = document.getElementById('topbar');
-  const onScroll = () => topbar?.classList.toggle('is-scrolled', window.scrollY > 6);
-  window.removeEventListener('scroll', window.__sipaScroll ?? (() => {}));
-  window.__sipaScroll = onScroll;
-  window.addEventListener('scroll', onScroll, { passive: true });
+  if (scrollHandler) window.removeEventListener('scroll', scrollHandler);
+  scrollHandler = () => topbar?.classList.toggle('is-scrolled', window.scrollY > 6);
+  window.addEventListener('scroll', scrollHandler, { passive: true });
 
   if (state.locked) renderLock();
   scheduleLock();
   refreshUnread();
 }
 
+// Une seule peinture à la fois. Une requête arrivée pendant une transition
+// (redirection de route, événement temps réel) est rejouée juste après.
+function flushRenderQueue() {
+  if (!renderQueued) return;
+  renderQueued = false;
+  render();
+}
+
 // Transitions entre pages : View Transitions API quand elle est disponible,
 // repli silencieux sur l'animation CSS d'écran sinon.
 export async function render() {
-  if (!document.startViewTransition || prefersReducedMotion() || viewTransitionRunning || state.locked) {
-    return paintCurrentRoute();
+  if (viewTransitionRunning) {
+    renderQueued = true;
+    return;
   }
+
+  const useTransition =
+    !firstPaint && document.startViewTransition && !prefersReducedMotion() && !state.locked;
+  firstPaint = false;
+
+  if (!useTransition) {
+    try {
+      await paintCurrentRoute();
+    } finally {
+      flushRenderQueue();
+    }
+    return;
+  }
+
   viewTransitionRunning = true;
   let started = false;
   try {
@@ -461,6 +480,7 @@ export async function render() {
     if (!started) await paintCurrentRoute();
   } finally {
     viewTransitionRunning = false;
+    flushRenderQueue();
   }
 }
 
@@ -472,11 +492,6 @@ window.SIPA = {
   toast,
   modal,
   icon,
-  fmtDateTime,
-  esc,
-  setVault,
-  setSession,
-  vaultToken,
   logoMark,
   setMotion,
   motionSetting,

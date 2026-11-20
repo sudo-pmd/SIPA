@@ -1,6 +1,6 @@
 // Service worker SIPA : coquille applicative hors-ligne, cache des tuiles
 // et des points du département, réseau d'abord pour les données de santé.
-const VERSION = 'sipa-v3';
+const VERSION = 'sipa-v4';
 const SHELL = [
   '/',
   '/index.html',
@@ -34,6 +34,9 @@ const SHELL = [
   '/manifest.webmanifest',
   '/icons/icon.svg',
   '/icons/icon-maskable.svg',
+  '/icons/icon-180.png',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {

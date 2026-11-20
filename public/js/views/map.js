@@ -42,7 +42,7 @@ export async function render(root, { params }) {
       ).join('')}
     </div>
     <div class="row" style="gap:8px;margin:6px 0 12px">
-      <input class="input" id="search" placeholder="Rechercher une structure, une commune…" style="min-height:42px" />
+      <input class="input" id="search" placeholder="Pharmacie, centre, quartier" style="min-height:42px" />
       <button class="icon-btn" id="locate" title="Me localiser" style="flex:none;width:44px;height:44px">${icon('pin', 18)}</button>
     </div>
     <div class="map-wrap" id="map-wrap"><div id="map"></div></div>

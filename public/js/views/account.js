@@ -4,23 +4,8 @@ import { icon, esc, relative, toast, modal } from '../ui.js';
 import { registerBiometric } from './auth.js';
 import { hasSnapshot, clearSnapshot } from '../offline.js';
 
-// Préférence de mouvement (transitions d'écran et animations).
-function readMotion() {
-  try {
-    return localStorage.getItem('sipa.motion') === 'reduced' ? 'reduced' : 'auto';
-  } catch {
-    return 'auto';
-  }
-}
-
-function writeMotion(mode) {
-  document.documentElement.dataset.motion = mode === 'reduced' ? 'reduced' : '';
-  try {
-    localStorage.setItem('sipa.motion', mode);
-  } catch {
-    /* stockage indisponible */
-  }
-}
+// La préférence de mouvement vit dans app.js (source unique, appliquée au boot).
+const readMotion = () => window.SIPA?.motionSetting?.() ?? 'auto';
 
 const KIND_ICON = {
   WELCOME: 'shield',
@@ -124,7 +109,7 @@ export async function settings(root) {
           }</span></div>
           ${icon('chevron', 16)}
         </button>
-        <button class="list__item" id="lock-now">
+        <button class="list__item" data-lock-now>
           <div class="list__icon">${icon('lock', 16)}</div>
           <div class="list__body"><strong>Verrouiller maintenant</strong><span>Verrouillage aussi automatique après 60 s</span></div>
         </button>
@@ -248,11 +233,6 @@ export async function settings(root) {
     });
   };
 
-  root.querySelector('#lock-now').onclick = () => {
-    state.locked = true;
-    document.getElementById('lock-now')?.click();
-  };
-
   root.querySelectorAll('[data-lang]').forEach((node) => {
     node.onclick = async () => {
       try {
@@ -268,7 +248,7 @@ export async function settings(root) {
 
   root.querySelectorAll('[data-motion]').forEach((button) => {
     button.onclick = () => {
-      const mode = writeMotion(button.dataset.motion);
+      const mode = window.SIPA?.setMotion?.(button.dataset.motion) ?? 'auto';
       root.querySelectorAll('[data-motion]').forEach((chip) => chip.classList.toggle('is-active', chip === button));
       toast(mode === 'reduced' ? 'Animations réduites' : 'Animations activées', 'ok');
     };

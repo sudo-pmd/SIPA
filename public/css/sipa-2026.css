@@ -71,7 +71,6 @@
   --alert: #a83b2c;
   --alert-tint: #fae6e1;
   --radius: 18px;
-  --radius-sm: 12px;
   --shadow: 0 1px 2px rgba(13, 33, 53, 0.05), 0 14px 34px -26px rgba(13, 33, 53, 0.5);
   --shadow-lift: 0 2px 4px rgba(13, 33, 53, 0.05), 0 24px 48px -28px rgba(13, 33, 53, 0.45);
   --ring: 0 0 0 4px rgba(29, 79, 122, 0.16);
@@ -153,7 +152,6 @@ h1, h2, h3, h4 { font-family: var(--serif); letter-spacing: -0.025em; font-weigh
 }
 .brand--sm .brand__mark { width: 34px; height: 34px; }
 .pro-side .brand__mark { color: #fff; background: transparent; }
-.pro-side .brand:hover .brand__mark { color: #fff; }
 
 /* ------------------------------------------------------------------ Topbar */
 .topbar {
@@ -171,6 +169,7 @@ h1, h2, h3, h4 { font-family: var(--serif); letter-spacing: -0.025em; font-weigh
 .icon-btn:active { transform: scale(0.94); }
 .code-chip {
   font-size: 10px;
+  white-space: nowrap;
   background: linear-gradient(180deg, #fff, #f5f7f5);
   box-shadow: inset 0 1px 0 #fff;
   transition: color 0.2s ease, border-color 0.2s ease;
@@ -222,7 +221,7 @@ h1, h2, h3, h4 { font-family: var(--serif); letter-spacing: -0.025em; font-weigh
   transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease), border-color 0.3s ease;
   box-shadow: var(--shadow);
 }
-a.card:hover, button.card:hover, .card--lift:hover {
+a.card:hover, button.card:hover {
   transform: translateY(-3px);
   box-shadow: var(--shadow-lift);
   border-color: var(--line-strong);
@@ -231,7 +230,6 @@ a.card:active { transform: translateY(-1px) scale(0.995); }
 a.card .list__icon { transition: transform 0.35s var(--ease); }
 a.card:hover .list__icon { transform: scale(1.08) rotate(-3deg); }
 .card--ink { background: linear-gradient(150deg, #215a88, #123a5c 70%); border-color: transparent; }
-.grid-2 > a.card { text-decoration: none; }
 
 /* ----------------------------------------------------------------- Listes */
 .list { background: var(--paper); box-shadow: var(--shadow); }
@@ -296,7 +294,7 @@ a.card:hover .list__icon { transform: scale(1.08) rotate(-3deg); }
 .chip:hover { border-color: var(--teal); color: var(--teal); transform: translateY(-1px); box-shadow: 0 8px 16px -14px rgba(13, 33, 53, 0.8); }
 .chip.is-active { box-shadow: 0 10px 20px -14px rgba(29, 79, 122, 0.9); }
 
-.pill { border-radius: 7px; transition: transform 0.2s var(--ease); }
+.pill { border-radius: 7px; }
 
 /* -------------------------------------------------------------- Formulaire */
 .input {
@@ -345,13 +343,10 @@ a.card:hover .list__icon { transform: scale(1.08) rotate(-3deg); }
 @keyframes dot-in { from { opacity: 0; transform: scale(0.3); } to { opacity: 1; transform: scale(1); } }
 
 /* ----------------------------------------------------- Transitions d'écran */
-.screen {
-  animation: screen-in 0.4s var(--ease-out) both;
-  will-change: transform, opacity;
-}
+.screen { animation: screen-in 0.4s var(--ease-out) both; }
 @keyframes screen-in {
-  from { opacity: 0; transform: translateY(10px) scale(0.996); filter: blur(2px); }
-  to { opacity: 1; transform: none; filter: none; }
+  from { opacity: 0; transform: translateY(10px) scale(0.996); }
+  to { opacity: 1; transform: none; }
 }
 .section { animation: rise 0.5s var(--ease-out) both; }
 .section:nth-of-type(2) { animation-delay: 0.04s; }
@@ -422,7 +417,7 @@ a.card:hover .list__icon { transform: scale(1.08) rotate(-3deg); }
   padding: 6px 12px;
   font-size: 11.5px;
   letter-spacing: 0.04em;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s var(--ease);
 }
 .copy-btn:hover { border-color: var(--teal); color: var(--teal); transform: translateY(-1px); }
 
@@ -442,8 +437,6 @@ a.card:hover .list__icon { transform: scale(1.08) rotate(-3deg); }
 }
 .lock__mark svg { width: 100%; height: 100%; }
 .lock h1 { letter-spacing: -0.03em; }
-.lock .btn--quiet { animation: none; }
-.lock .btn:focus-visible { outline-offset: 3px; }
 
 /* ------------------------------------------------------------- Bienvenue */
 .welcome { animation: screen-in 0.45s var(--ease-out) both; }
@@ -507,8 +500,6 @@ a.card:hover .list__icon { transform: scale(1.08) rotate(-3deg); }
 .table td.mono, .table .table__actions { white-space: nowrap; }
 .table tbody tr { transition: background 0.2s ease; }
 .table tbody tr:hover { background: #f7f9fb; }
-.tabs button { transition: color 0.2s ease, border-color 0.2s ease; }
-.tabs button:hover { color: var(--teal); }
 
 /* ---------------------------------------------------------------- Splash */
 .splash {
@@ -538,20 +529,10 @@ a.card:hover .list__icon { transform: scale(1.08) rotate(-3deg); }
 .banner { transition: background 0.2s ease; }
 .empty { border-color: var(--line-strong); background: rgba(255, 255, 255, 0.5); }
 .timeline__step.is-done .timeline__dot { box-shadow: 0 0 0 3px rgba(29, 79, 122, 0.12); }
-.stat b { letter-spacing: -0.02em; }
 .result-cell { transition: background 0.2s ease; }
 .result-cell:hover { background: #f7f9fb; }
 .link { text-decoration: none; border-bottom-width: 1px; transition: color 0.2s ease, border-color 0.2s ease; }
 .link:hover { color: var(--teal-deep); }
-.sr-only {
-  position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
 
 /* ------------------------------------------------- Accessibilité · mouvement */
 [data-motion='reduced'] *,
@@ -599,4 +580,15 @@ a.card:hover .list__icon { transform: scale(1.08) rotate(-3deg); }
   .display { font-size: 27px; }
   .hero h1 { font-size: 24px; }
   .brand__text b { font-size: 15px; }
+  /* Sur téléphone, les puces passent à la ligne : un défilement horizontal
+     sans barre coupait les libellés en plein mot. */
+  .chips { flex-wrap: wrap; overflow-x: visible; }
+}
+
+/* Quand les View Transitions prennent le relais, l'animation CSS d'entrée doit
+   être coupée : le snapshot du nouvel état est pris à l'instant 0 de
+   l'animation, donc à opacité nulle — sinon la page apparaît vide puis saute.
+   Placé en dernier pour gagner la cascade sur .welcome et .section. */
+@supports (view-transition-name: none) {
+  .screen, .section, .welcome { animation: none; }
 }

@@ -82,15 +82,18 @@ Le logo fourni (cœur-feuille bleu profond, point orange, wordmark SIPA) a été
 | `public/brand/logo-horizontal.svg` | lockup horizontal (partages, e-mails, Open Graph) |
 | `public/icons/icon.svg` | favicon + icône d’application (marque blanche sur dégradé bleu) |
 | `public/icons/icon-maskable.svg` | icône maskable Android (zone de sécurité respectée) |
+| `public/icons/icon-192.png` / `icon-512.png` | icônes d’application du manifest (`purpose: any`) |
+| `public/icons/icon-180.png` | `apple-touch-icon` iOS, plein carré opaque |
 
 Le marqueur de marque est injecté par `logoMark()` dans `public/js/ui.js` : le SVG hérite
 de `currentColor`, ce qui permet de l’afficher en bleu sur fond clair, en blanc sur la
 barre latérale du portail professionnel, sans dupliquer de fichier.
 
-Le favicon est un SVG (`<link rel="icon" type="image/svg+xml">`) : net sur tous les
-navigateurs modernes, sans PNG à générer. Les navigateurs qui ignorent les icônes SVG
-affichent l’icône par défaut — c’est le seul compromis, assumé pour éviter d’ajouter
-une chaîne de build d’images.
+Le favicon est un SVG (`<link rel="icon" type="image/svg+xml">`), net sur tous les
+navigateurs modernes. Les icônes PNG attendues par le manifest et iOS sont fournies
+(192, 512 et 180 px) et déclarées dans `manifest.webmanifest` et `index.html`. Elles
+sont rastérisées depuis les SVG avec le Chrome du poste (`--headless`), sans ajouter de
+dépendance au projet ; `MISE-EN-PRODUCTION.md` décrit leur régénération.
 
 ### 4.2 Système de design 2026
 
@@ -263,7 +266,7 @@ coffre et interprétations, pass QR, parité TOTP client/serveur, chat et fil co
 | Pastilles audio wolof | Synthèse vocale française + fiches wolof prévues au pilote | Pas de TTS wolof hors-ligne fiable |
 | WebAuthn | Cérémonie réelle `create/get`, assertion non vérifiée cryptographiquement côté serveur ; DEK biométrique scellée par la plateforme | Vérification d’assertion et enclave matérielle relèvent du durcissement |
 | Attestation PDF | Génération imprimable (PDF via impression navigateur), sans aucun résultat | Évite une dépendance de rendu PDF |
-| Icônes iOS | Favicon SVG + icône maskable SVG | Pas de chaîne de rendu PNG dans un projet sans dépendance ; voir `MISE-EN-PRODUCTION.md` |
+| Icônes iOS | `apple-touch-icon` 180 px opaque + icônes PNG 192/512 du manifest | PNG rastérisés depuis les SVG, sans dépendance de build |
 
 ---
 
